@@ -1,0 +1,6 @@
+@PACKAGE_INIT@
+set(libdmc_DIR "@PACKAGE_SOME_INSTALL_DIR@")
+set_and_check(libdmc_INCLUDE_DIR "@PACKAGE_INSTALL_INCLUDE_DIR@")
+include("${CMAKE_CURRENT_LIST_DIR}/libdmcTargets.cmake")
+
+check_required_components(libdmc)
