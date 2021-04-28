@@ -11,7 +11,7 @@ add_definitions(-fPIC)
 gtest_discover_tests(storage_test)
 target_link_libraries(storage_test PUBLIC
     -fPIC
-    gtest gmock gtest_main
+    gtest gtest_main
     -lpthread -lm
     libtreedbs
     -latomic
@@ -34,7 +34,7 @@ add_definitions(-fPIC)
 gtest_discover_tests(model_test)
 target_link_libraries(model_test PUBLIC
     -fPIC
-    gtest gmock gtest_main
+    gtest gtest_main
     -lpthread -lm libfrugi
     libtreedbs
     -latomic
