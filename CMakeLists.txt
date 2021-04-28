@@ -5,7 +5,7 @@ include(FetchContent)
 FetchContent_Declare(
         dtree
         GIT_REPOSITORY https://github.com/bergfi/dtree.git
-        GIT_TAG        4e314dff5b93906ce12739e362991225d5866c68
+        GIT_TAG        861f50b642bc4b1cd6af6d60d91be68e2b77b7dc
 )
 FetchContent_Declare(
         libfrugi

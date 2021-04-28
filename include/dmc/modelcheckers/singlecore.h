@@ -104,14 +104,19 @@ public:
         printf("Found %zu states, explored %zu transitions\n", _states, _transitions);
         printf("States/s: %lf\n", ((double)_states)/elapsed);
         printf("Transitions/s: %lf\n", ((double)_transitions)/elapsed);
-        printf("Storage Stats (%s):\n", _storage.getName().c_str());
         //Stats
-        auto stats = _storage.getStatistics();
-        _storage.printStats();
-        printf("Inserted vector-data in bytes: %zu\n", ctx.stateBytesInsertedIntoStorage);
-        printf("Compression ratio (%zu used bytes): %lf (%lf bytes per state)\n", stats._bytesInUse, (double)ctx.stateBytesInsertedIntoStorage / (stats._bytesInUse), (double)stats._bytesInUse / _states);
-        printf("Compression ratio (%zu reserved bytes): %lf (%lf bytes per state)\n", stats._bytesReserved, (double)ctx.stateBytesInsertedIntoStorage / (stats._bytesReserved), (double)stats._bytesReserved / _states);
-        _listener.finish();
+        if(_stats) {
+            printf("Storage Stats (%s):\n", _storage.getName().c_str());
+            auto stats = _storage.getStatistics();
+            _storage.printStats();
+            printf("Inserted vector-data in bytes: %zu\n", ctx.stateBytesInsertedIntoStorage);
+            printf("Compression ratio (%zu used bytes): %lf (%lf bytes per state)\n", stats._bytesInUse,
+                   (double) ctx.stateBytesInsertedIntoStorage / (stats._bytesInUse),
+                   (double) stats._bytesInUse / _states);
+            printf("Compression ratio (%zu reserved bytes): %lf (%lf bytes per state)\n", stats._bytesReserved,
+                   (double) ctx.stateBytesInsertedIntoStorage / (stats._bytesReserved),
+                   (double) stats._bytesReserved / _states);
+        }
     }
 
 //    void goDFS() {
@@ -404,6 +409,7 @@ public:
     }
 
     void setSettings(Settings& settings) {
+        if(settings["stats"].isOn()) _stats = 1;
         _listener.setSettings(settings);
     }
 
@@ -420,4 +426,5 @@ protected:
     Storage _storage;
     std::vector<StateID> endStates;
     Listener& _listener;
+    size_t _stats;
 };

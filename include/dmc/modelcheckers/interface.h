@@ -20,13 +20,13 @@ public:
     StateSlot* allocate(size_t slots) {
         auto current = _next;
         _next += (slots + (sizeof(uint64_t) / sizeof(StateSlot) - 1)) / (sizeof(uint64_t) / sizeof(StateSlot));
-#ifndef NDEBUG
-        if(_next > _buffer.data() + _buffer.capacity()) {
+//#ifndef NDEBUG
+        if(__glibc_unlikely(_next > _buffer.data() + _buffer.capacity())) {
             fprintf(stderr, "SimpleAllocator(%p)::allocate(%zu): allocator full (%zu), next %p\n", this, slots, _buffer.capacity(), _next);
             fflush(stderr);
             abort();
         }
-#endif
+//#endif
         return (StateSlot*)current;
     }
 
@@ -177,7 +177,7 @@ public:
     VModelChecker(VModel<STORAGE>* m): _m(m) {
 
     }
-    
+
     VModel<STORAGE>* getModel() const { return _m; }
 //    STORAGE& getStorage() const = 0;
 

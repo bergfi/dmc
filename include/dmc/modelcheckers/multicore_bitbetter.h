@@ -167,7 +167,7 @@ public:
 
 //        size_t aff = sched_getcpu();
 
-        if constexpr(storage.needsThreadInit()) {
+        if constexpr(Storage::needsThreadInit()) {
             storage.thread_init();
         }
         tprintf("[%zu] starting up thread %u... \n", tid);
@@ -188,7 +188,7 @@ public:
             do {
                 tprintf("[%zu] current state: %16zx \n", tid, current);
                 if(__glibc_unlikely(ctx.quit)) {
-                    abort();
+                    abort(); //TODO: remove
                     break;
                 }
                 ctx.sourceState = current.getData();
@@ -207,7 +207,7 @@ public:
                 }
                 if constexpr(limit != 0) {
                     if(ctx.stateQueueNew.size() >= limit) {
-                        printf("[%zu] reached limit %u\n", tid, limit);
+                        tprintf("[%zu] reached limit %u\n", tid, limit);
                         return nullptr;
                     }
                 }
@@ -245,17 +245,10 @@ public:
 
         ctx._owner = pthread_self();
         _m->init(&ctx);
-        size_t initialStates = this->_m->getInitial(&ctx);
+        this->_m->getInitial(&ctx);
         ctx._owner = 0;
 
         _timer.reset();
-
-//        stateQueueNew.push_back(init);
-//        _centralStateEnqueues.fetch_add(1, std::memory_order_relaxed);
-//        _states++;
-//        ctx.stateSlotsInsertedIntoStorage += _storage.determineLength(init);
-
-        printf("first phase...\n");
         nonWaiters = 1;
         quit = false;
 
@@ -266,8 +259,6 @@ public:
         bool fireThreads = !ctx.stateQueueNew.empty();
 
         if(fireThreads) {
-
-            printf("first phase resulted in %zu states and %zu transitions\n", ctx.localStates, ctx.localTransitions);
 
             _states.fetch_add(ctx.localStates, std::memory_order_relaxed);
             _transitions.fetch_add(ctx.localTransitions, std::memory_order_relaxed);
@@ -285,11 +276,8 @@ public:
             ctx.allocator.clear();
 
             _workers.reserve(_threads);
-            printf("going (%zu)...\n", _threads);
             nonWaiters = _threads;
             quit = false;
-            printf("stateQueueNew.size():     %zu\n", stateQueueNew.size());
-            printf("ctx.stateQueueNew.size(): %zu\n", ctx.stateQueueNew.size());
             stateQueueNew.swap(ctx.stateQueueNew);
 
             for(size_t tid = 1; tid < _threads; ++tid) {
@@ -316,14 +304,20 @@ public:
         size_t stateSlotsInsertedIntoStorage = 0;
         if(fireThreads) {
             for(size_t tid=_threads; tid--;) {
+                if(_buildSizeHistogram) {
+                    for(auto& s: _workerContexts[tid]._sizeHistogram) {
+                        _sizeHistogram[s.first] += s.second;
+                    }
+                    _workerContexts[tid]._sizeHistogram.clear();
+                }
                 if(!_workerContexts[tid].stateQueueNew.empty()) {
                     printf("State Queue %zu still contains states: %zu\n", tid, _workerContexts[tid].stateQueueNew.size());
                 }
                 if(_workerContexts[tid].localStates != 0) {
-                    printf("State Queue %zu still contains states count: %zu\n", tid, _workerContexts[tid].localStates);
+                    printf("Context %zu still contains states count: %zu\n", tid, _workerContexts[tid].localStates);
                 }
                 if(_workerContexts[tid].localTransitions != 0) {
-                    printf("State Queue %zu still contains transitions count: %zu\n", tid, _workerContexts[tid].localTransitions);
+                    printf("Context %zu still contains transitions count: %zu\n", tid, _workerContexts[tid].localTransitions);
                 }
                 threadElapsed += _workerContexts[tid].elapsedSeconds;
                 stateSlotsInsertedIntoStorage += _workerContexts[tid].stateSlotsInsertedIntoStorage;
@@ -371,28 +365,27 @@ public:
             }
             printf("%lf (%lf bytes per state)\n", 4 * (double)ctx.stateSlotsInsertedIntoStorage / (stats._bytesReserved), (double)stats._bytesReserved / _states);
         }
-        printf("Complete size histogram:\n");
-        printf(" size  nr of (sub)states\n");
 
-        std::vector<size_t> keys;
+        if(_buildSizeHistogram) {
+            printf("Complete size histogram:\n");
+            printf(" size  nr of (sub)states\n");
 
-        keys.reserve(_sizeHistogram.size());
-        size_t max = 0;
-        for(auto& it : _sizeHistogram) {
-            keys.push_back(it.first);
-            max = max > it.second ? max : it.second;
-        }
-        std::sort(keys.begin(), keys.end());
-        for (auto& len : keys) {
-            size_t nr = _sizeHistogram[len];
-            std::cout << std::setfill(' ') << std::setw(5) << len;
-            std::cout << ", ";
-            std::cout << std::setfill(' ') << std::setw(10) << nr;
-//            std::cout << " ";
-//            for(size_t e = (64*nr+max-1)/max; e--;) {
-//                std::cout << "#";
-//            }
-            std::cout << std::endl;
+            std::vector<size_t> keys;
+
+            keys.reserve(_sizeHistogram.size());
+            size_t max = 0;
+            for(auto& it : _sizeHistogram) {
+                keys.push_back(it.first);
+                max = max > it.second ? max : it.second;
+            }
+            std::sort(keys.begin(), keys.end());
+            for(auto& len : keys) {
+                size_t nr = _sizeHistogram[len];
+                std::cout << std::setfill(' ') << std::setw(5) << len;
+                std::cout << ", ";
+                std::cout << std::setfill(' ') << std::setw(10) << nr;
+                std::cout << std::endl;
+            }
         }
     }
 
@@ -420,13 +413,6 @@ public:
 
         _states.fetch_add(ctx->localStates, std::memory_order_relaxed);
         _transitions.fetch_add(ctx->localTransitions, std::memory_order_relaxed);
-
-        if(_buildSizeHistogram) {
-            for(auto& s: ctx->_sizeHistogram) {
-                _sizeHistogram[s.first] += s.second;
-            }
-            ctx->_sizeHistogram.clear();
-        }
         ctx->localStates = 0;
         ctx->localTransitions = 0;
 
@@ -678,7 +664,7 @@ public:
 
     void setSettings(Settings& settings) {
         _threads = settings["threads"].asUnsignedValue();
-        if(settings["nostats"].asUnsignedValue()) _stats = 0;
+        if(settings["stats"].isOn()) _stats = 1;
         if(settings["buildsizehistogram"].asUnsignedValue()) _buildSizeHistogram = 1;
     }
 

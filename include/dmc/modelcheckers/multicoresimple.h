@@ -52,7 +52,7 @@ public:
         _storage.init();
         Context ctx(this, this->_m);
         _m->init(&ctx);
-        size_t initialStates = this->_m->getInitial(&ctx);
+        this->_m->getInitial(&ctx);
         System::Timer timer;
 
 //        _states++;
