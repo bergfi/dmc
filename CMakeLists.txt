@@ -10,7 +10,7 @@ FetchContent_Declare(
 FetchContent_Declare(
         libfrugi
         GIT_REPOSITORY https://github.com/bergfi/libfrugi.git
-        GIT_TAG        a88ef3e543802c0119ae29006c724915a36c0ee9
+        GIT_TAG        93deb6ad08818c99d4a2ddf520f12527bb3dd542
 )
 
 FetchContent_MakeAvailable(libfrugi dtree)

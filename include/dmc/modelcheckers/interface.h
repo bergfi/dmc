@@ -164,6 +164,7 @@ public:
     virtual StateID appendState(VContext<STORAGE>* ctx, StateID const& stateID, size_t length, const StateSlot* slots, bool rootState) = 0;
     virtual const FullState* getSubState(VContext<STORAGE>* ctx, StateID const& s) = 0;
     virtual bool getState(VContext<STORAGE>* ctx, StateID const& s, StateSlot* data, bool isRoot = true) = 0;
+    virtual bool getState(StateID const& s, StateSlot* data, bool isRoot = true) = 0;
     virtual bool getStatePartial(VContext<STORAGE>* ctx, StateID const& s, size_t offset, StateSlot* data, size_t length, bool isRoot = true) = 0;
     virtual bool getSubStatePartial(VContext<STORAGE>* ctx, StateID const& s, size_t offset, StateSlot* data, size_t length) = 0;
     virtual Delta& newDelta(void* buffer, size_t offset, const StateSlot* data, size_t len) = 0;
@@ -176,7 +177,7 @@ public:
     VModelChecker(VModel<STORAGE>* m): _m(m) {
 
     }
-
+    
     VModel<STORAGE>* getModel() const { return _m; }
 //    STORAGE& getStorage() const = 0;
 

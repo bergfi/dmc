@@ -26,14 +26,18 @@ public:
     struct Context: public VContext<llmc::storage::StorageInterface> {
         SimpleAllocator<StateSlot> allocator;
         size_t stateBytesInsertedIntoStorage;
-        Context(VModelChecker<llmc::storage::StorageInterface>* mc, VModel<llmc::storage::StorageInterface>* model): VContext<llmc::storage::StorageInterface>(mc, model), stateBytesInsertedIntoStorage(0) {}
+        Context(VModelChecker<llmc::storage::StorageInterface>* mc, VModel<llmc::storage::StorageInterface>* model): VContext<llmc::storage::StorageInterface>(mc, model), allocator(), stateBytesInsertedIntoStorage(0) {}
     };
 
-    explicit SingleCoreModelChecker(Model* m): VModelChecker<llmc::storage::StorageInterface>(m) {
+    SingleCoreModelChecker(): VModelChecker<llmc::storage::StorageInterface>(nullptr), stateQueue(), stateQueueNew(), _stats(0) {
         _rootTypeID = 0;
     }
 
-    SingleCoreModelChecker(Model* m, Listener& listener): VModelChecker<llmc::storage::StorageInterface>(m), _listener(listener) {
+    explicit SingleCoreModelChecker(Model* m): VModelChecker<llmc::storage::StorageInterface>(m), stateQueue(), stateQueueNew(), _stats(0) {
+        _rootTypeID = 0;
+    }
+
+    SingleCoreModelChecker(Model* m, Listener& listener): VModelChecker<llmc::storage::StorageInterface>(m), stateQueue(), stateQueueNew(), _listener(listener), _stats(0) {
         _rootTypeID = 0;
     }
 
@@ -82,15 +86,7 @@ public:
                     size_t oldNr = _transitions;
                     this->_m->getNextAll(ctx.sourceState, &ctx);
                     if(oldNr == _transitions) {
-
-                        // TODO: dirty hack, this checks the PC of the first process
-                        uint32_t status;
-                        getStatePartial(&ctx, ctx.sourceState.getData(), 6, &status, 1);
-                        if(status != 0) {
-                            printf("INVALID END STATE %zu\n", ctx.sourceState.getData());
-                        } else {
-                            printf("VALID END STATE %zu\n", ctx.sourceState.getData());
-                        }
+                        endStates.push_back(ctx.sourceState);
                     }
                     level_states++;
                 } while(!stateQueue.empty());
@@ -265,6 +261,10 @@ public:
         return _storage.get(data, s, isRoot);
     }
 
+    bool getState(llmc::storage::StorageInterface::StateID const& s, StateSlot* data, bool isRoot = true) override {
+        return _storage.get(data, s, isRoot);
+    }
+
     llmc::storage::StorageInterface::StateID newSubState(VContext<llmc::storage::StorageInterface>* ctx_, size_t length, llmc::storage::StorageInterface::StateSlot* slots) override {
         Context *ctx = static_cast<Context *>(ctx_);
         auto insertedState = _storage.insert(slots, length, false);
@@ -407,6 +407,10 @@ public:
         _listener.setSettings(settings);
     }
 
+    std::vector<StateID> const& getEndStates() {
+        return endStates;
+    }
+
 protected:
     StateTypeID _rootTypeID;
     size_t _states = 0;
@@ -414,5 +418,6 @@ protected:
     std::deque<StateID> stateQueue;
     std::deque<StateID> stateQueueNew;
     Storage _storage;
+    std::vector<StateID> endStates;
     Listener& _listener;
 };

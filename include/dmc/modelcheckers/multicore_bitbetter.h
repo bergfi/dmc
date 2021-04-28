@@ -107,6 +107,7 @@ public:
         size_t threadID;
         std::deque<StateID> stateQueueNew;
         SimpleAllocator<StateSlot> allocator;
+        std::vector<StateID> endStates;
 
         double elapsedSeconds;
         size_t stateSlotsInsertedIntoStorage;
@@ -118,10 +119,13 @@ public:
 
         bool quit;
 
-        Context(MultiCoreModelChecker* mc, Model* model, size_t threadID): VContextImpl<llmc::storage::StorageInterface, MultiCoreModelChecker>(mc, model), localStates(0), localTransitions(0), threadID(threadID), stateSlotsInsertedIntoStorage(0), _owner(0), quit(false) {}
+        Context(MultiCoreModelChecker* mc, Model* model, size_t threadID): VContextImpl<llmc::storage::StorageInterface, MultiCoreModelChecker>(mc, model), localStates(0), localTransitions(0), threadID(threadID), endStates(), stateSlotsInsertedIntoStorage(0), _owner(0), quit(false) {
+            endStates.reserve(1024);
+        }
+
     };
 
-    MultiCoreModelChecker(Model* m): VModelChecker<llmc::storage::StorageInterface>(m), _states(0), _transitions(0), _threads(0), _stats(1), _buildSizeHistogram(0) {
+    MultiCoreModelChecker(): VModelChecker<llmc::storage::StorageInterface>(nullptr), _states(0), _transitions(0), _threads(0), _stats(0), _buildSizeHistogram(0), _endStatesObtained(0) {
         _rootTypeID = 0;
 
         // TODO: remove all this
@@ -129,9 +133,16 @@ public:
         signal(SIGINT, signalHandler);
     }
 
-    MultiCoreModelChecker(Model* m, Listener& listener): VModelChecker<llmc::storage::StorageInterface>(m), _states(0), _transitions(0), _centralStateEnqueues(0), _centralStateDequeues(0), _listener(listener), _threads(0), _stats(1), _buildSizeHistogram(0) {
+    MultiCoreModelChecker(Model* m): VModelChecker<llmc::storage::StorageInterface>(m), _states(0), _transitions(0), _threads(0), _stats(0), _buildSizeHistogram(0), _endStatesObtained(0) {
         _rootTypeID = 0;
-        single = this; //TODO: remove
+
+        // TODO: remove all this
+        single = this;
+        signal(SIGINT, signalHandler);
+    }
+
+    MultiCoreModelChecker(Model* m, Listener& listener): VModelChecker<llmc::storage::StorageInterface>(m), _states(0), _transitions(0), _centralStateEnqueues(0), _centralStateDequeues(0), _listener(listener), _threads(0), _stats(0), _buildSizeHistogram(0), _endStatesObtained(0) {
+        _rootTypeID = 0;
 
         // TODO: remove all this
         single = this;
@@ -182,7 +193,15 @@ public:
                 }
                 ctx.sourceState = current.getData();
                 ctx.allocator.clear();
+                auto _oldTransitions = ctx.localTransitions;
                 model.getNextAll(ctx.sourceState, &ctx);
+                if(_oldTransitions == ctx.localTransitions) {
+                    if(ctx.endStates.size() >= ctx.endStates.capacity()) {
+                        assert(ctx.endStates.capacity() > 0 && "initial capacity should be > 0");
+                        ctx.endStates.reserve(ctx.endStates.capacity() * 2);
+                    }
+                    ctx.endStates.emplace_back(ctx.sourceState);
+                }
                 if(ctx.stateQueueNew.empty()) {
                     break;
                 }
@@ -598,17 +617,21 @@ public:
         }
     }
 
-    virtual bool getState(VContext<llmc::storage::StorageInterface>* ctx_, StateID const& s, StateSlot* data, bool isRoot = true) {
+    bool getState(VContext<llmc::storage::StorageInterface>* ctx_, StateID const& s, StateSlot* data, bool isRoot = true) {
         (void)ctx_;
         return _storage.get(data, s, isRoot);
     }
 
-    virtual bool getStatePartial(VContext<llmc::storage::StorageInterface>* ctx_, StateID const& s, size_t offset, StateSlot* data, size_t length, bool isRoot = true) {
+    bool getState(StateID const& s, StateSlot* data, bool isRoot = true) {
+        return _storage.get(data, s, isRoot);
+    }
+
+    bool getStatePartial(VContext<llmc::storage::StorageInterface>* ctx_, StateID const& s, size_t offset, StateSlot* data, size_t length, bool isRoot = true) {
         (void)ctx_;
         return _storage.getPartial(s, offset, data, length, isRoot);
     }
 
-    virtual bool getSubStatePartial(VContext<llmc::storage::StorageInterface>* ctx_, StateID const& s, size_t offset, StateSlot* data, size_t length) {
+    bool getSubStatePartial(VContext<llmc::storage::StorageInterface>* ctx_, StateID const& s, size_t offset, StateSlot* data, size_t length) {
         (void)ctx_;
         return _storage.getPartial(s, offset, data, length, false);
     }
@@ -659,6 +682,16 @@ public:
         if(settings["buildsizehistogram"].asUnsignedValue()) _buildSizeHistogram = 1;
     }
 
+    std::vector<StateID> const& getEndStates() {
+        if(!_endStatesObtained) {
+            for(auto& ctx: _workerContexts) {
+                endStates.insert(endStates.end(), ctx.endStates.begin(), ctx.endStates.end());
+            }
+            _endStatesObtained = true;
+        }
+        return endStates;
+    }
+
 protected:
     mutex_type mtx;
     std::condition_variable queue_cv;
@@ -679,6 +712,8 @@ protected:
     std::unordered_map<size_t, size_t> _sizeHistogram;
     bool _buildSizeHistogram;
     System::Timer _timer;
+    bool _endStatesObtained;
+    std::vector<StateID> endStates;
 };
 
 template<typename Model, typename STORAGE, template<typename,typename> typename LISTENER>

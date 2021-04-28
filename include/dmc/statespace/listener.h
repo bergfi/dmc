@@ -34,6 +34,8 @@ template<typename ModelChecker, typename Model>
 class VoidPrinter {
 public:
 
+    using TransitionInfo = typename Model::TransitionInfo;
+    using FullState = typename ModelChecker::FullState;
     using StateID = typename ModelChecker::StateID;
 
     VoidPrinter() {}
@@ -44,9 +46,12 @@ public:
 
     void finish() {}
 
-    void writeState(StateID const& stateID) {}
+    void writeState(Model* model, StateID const& stateID, const FullState* fsd) {}
+    void writeEndState(Model* model, StateID const& stateID, const FullState* fsd) {}
 
-    void writeTransition(StateID const& from, StateID const& to) {}
+    void writeTransition(StateID const& from, StateID const& to, TransitionInfo tInfo) {}
+
+    void setSettings(Settings& settings) {}
 };
 
 template<typename ModelChecker, typename Model>
@@ -62,10 +67,10 @@ public:
     using FullState = typename ModelChecker::FullState;
     using StateSlot = typename ModelChecker::StateSlot;
 
-    DotPrinter(): out(std::cerr), _writeState(false) {
+    DotPrinter(): out(std::cerr), _writingFullState(false), _writingSubState(false) {
 
     }
-    DotPrinter(std::ostream& out): out(out), _writeState(false) {
+    explicit DotPrinter(std::ostream& out): out(out), _writingFullState(false), _writingSubState(false) {
 
     }
 
@@ -80,7 +85,7 @@ public:
     }
 
     void writeState(Model* model, StateID const& stateID, const FullState* fsd) {
-        if(!_writeSubState && fsd && !fsd->isRoot()) {
+        if(!_writingSubState && fsd && !fsd->isRoot()) {
             return;
         }
         updatable_lock lock(mtx);
@@ -88,12 +93,14 @@ public:
 
         out << " [shape=record, label=\"{" << (stateID.getData() & 0xFFFFFFFFFFULL) << " (" << (stateID.getData() >> 40) << ")";
         out << "|{{state|{";
-        if(_writeState && fsd) writeVector(out, model, fsd->getLength(), fsd->getData());
+        if(_writingFullState && fsd) writeVector(out, model, fsd->getLength(), fsd->getData());
         out << "}}}";
         out << "}\"]";
 
         out << ";" << std::endl;
     }
+
+    void writeEndState(Model* model, StateID const& stateID, const FullState* fsd) {}
 
     void writeTransition(StateID const& from, StateID const& to, TransitionInfo tInfo) {
         updatable_lock lock(mtx);
@@ -134,15 +141,31 @@ public:
     }
 
     void setSettings(Settings& settings) {
-        _writeState = settings["listener.writestate"].isOn();
-        _writeSubState = settings["listener.writesubstate"].isOn();
+        _writingFullState = settings["listener.writestate"].isOn();
+        _writingSubState = settings["listener.writesubstate"].isOn();
+    }
+
+    [[nodiscard]] bool isWritingFullState() const {
+        return _writingFullState;
+    }
+
+    void setWritingFullState(bool writingFullState = true) {
+        _writingFullState = writingFullState;
+    }
+
+    [[nodiscard]] bool isWritingSubState() const {
+        return _writingSubState;
+    }
+
+    void setWritingSubState(bool writingSubState = true) {
+        _writingSubState = writingSubState;
     }
 
 private:
     std::ostream& out;
     mutex_type mtx;
-    bool _writeState;
-    bool _writeSubState;
+    bool _writingFullState;
+    bool _writingSubState;
 };
 
 template<typename ModelChecker, typename Model>
@@ -190,6 +213,41 @@ public:
 private:
     std::atomic<size_t> _states;
     std::atomic<size_t> _transitions;
+};
+
+template<typename ModelChecker, typename Model>
+class DotPrinterEndOnly {
+private:
+    DotPrinter<ModelChecker, Model> p;
+public:
+    using TransitionInfo = typename Model::TransitionInfo;
+    using FullState = typename ModelChecker::FullState;
+    using StateID = typename ModelChecker::StateID;
+
+    DotPrinterEndOnly() = default;
+
+    explicit DotPrinterEndOnly(std::ostream& out): p(out) {}
+
+    void init() {
+        p.init();
+    }
+
+
+    void finish() {
+        p.finish();
+    }
+
+    void writeState(Model* model, StateID const& stateID, const FullState* fsd) {}
+    void writeEndState(Model* model, StateID const& stateID, const FullState* fsd) {
+        p.writeState(model, stateID, fsd);
+    }
+
+    void writeTransition(StateID const& from, StateID const& to, TransitionInfo tInfo) {}
+
+    void setSettings(Settings& settings) {
+        p.setSettings(settings);
+        p.setWritingFullState();
+    }
 };
 
 } // namespace statespace

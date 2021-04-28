@@ -1,7 +1,7 @@
-template<typename Storage, template <typename, typename,template<typename,typename> typename> typename ModelChecker>
+template<typename Storage, template <typename, typename,template<typename,typename> typename> typename ModelChecker, typename Printer = llmc::statespace::VoidPrinter>
 class DMC {
 public:
-    using MC = ModelChecker<VModel < llmc::storage::StorageInterface>, Storage, llmc::statespace::DotPrinter >;
+    using MC = ModelChecker<VModel < llmc::storage::StorageInterface>, Storage, Printer >;
 public:
     void setup(Settings& settings) {
 
@@ -29,7 +29,7 @@ public:
             std::cout << "Wrong or no model selected: " << modelName << std::endl;
         }
         if(model) {
-            llmc::statespace::DotPrinter <MC, VModel<llmc::storage::StorageInterface>> printer(f);
+            Printer <MC, VModel<llmc::storage::StorageInterface>> printer(f);
             _mc = new MC(model, printer);
             _mc->getStorage().setSettings(settings);
             _mc->setSettings(settings);

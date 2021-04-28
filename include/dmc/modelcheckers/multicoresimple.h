@@ -33,6 +33,10 @@ public:
         Context(VModelChecker<llmc::storage::StorageInterface>* mc, VModel<llmc::storage::StorageInterface>* model): VContext<llmc::storage::StorageInterface>(mc, model) {}
     };
 
+    MultiCoreModelCheckerSimple():  VModelChecker<llmc::storage::StorageInterface>(nullptr), _states(0), _transitions(0) {
+        _rootTypeID = 0;
+    }
+
     MultiCoreModelCheckerSimple(Model* m):  VModelChecker<llmc::storage::StorageInterface>(m), _states(0), _transitions(0) {
         _rootTypeID = 0;
     }
@@ -197,6 +201,10 @@ public:
         }
     }
 
+    bool getState(llmc::storage::StorageInterface::StateID const& s, StateSlot* data, bool isRoot = true) override {
+        return _storage.get(data, s, isRoot);
+    }
+
     bool getState(VContext<llmc::storage::StorageInterface>* ctx_, llmc::storage::StorageInterface::StateID const& s, StateSlot* data, bool isRoot = true) override {
         return _storage.get(data, s, isRoot);
     }
@@ -290,6 +298,11 @@ public:
         }
     }
 
+    std::vector<StateID> const& getEndStates() {
+        abort();
+        return _endStates;
+    }
+
 protected:
     mutex_type mtx;
     std::deque<StateID> stateQueueNew;
@@ -299,4 +312,5 @@ protected:
     Storage _storage;
     Listener& _listener;
     size_t _threads;
+    std::vector<StateID> _endStates;
 };
