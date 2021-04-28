@@ -9,15 +9,16 @@ set_property(TARGET storage_test PROPERTY CXX_STANDARD_REQUIRED ON)
 add_definitions(-fPIC)
 
 gtest_discover_tests(storage_test)
-target_link_libraries(storage_test -fPIC
-        gtest gmock gtest_main
-        -lpthread -lm
-        libtreedbs
-        -latomic
-        libdmc
-        libtreedbs
-        dtree
-)
+target_link_libraries(storage_test PUBLIC
+    -fPIC
+    gtest gmock gtest_main
+    -lpthread -lm
+    libtreedbs
+    -latomic
+    libdmc
+    libtreedbs
+    dtree
+    )
 add_test(storage_test storage_test)
 
 #target_link_libraries(storage_test ${GTEST_LIBRARY_DEBUG} ${GTEST_MAIN_LIBRARY_DEBUG})
@@ -31,13 +32,14 @@ set_property(TARGET model_test PROPERTY CXX_STANDARD_REQUIRED ON)
 add_definitions(-fPIC)
 
 gtest_discover_tests(model_test)
-target_link_libraries(model_test -fPIC
-        gtest gmock gtest_main
-        -lpthread -lm libfrugi
-        libtreedbs
-        -latomic
-        libdmc
-        libtreedbs
-        dtree
-        )
+target_link_libraries(model_test PUBLIC
+    -fPIC
+    gtest gmock gtest_main
+    -lpthread -lm libfrugi
+    libtreedbs
+    -latomic
+    libdmc
+    libtreedbs
+    dtree
+    )
 add_test(model_test model_test)

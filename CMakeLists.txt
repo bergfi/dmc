@@ -74,8 +74,8 @@ target_include_directories(libdmc
         )
 
 target_link_libraries(libdmc
-        PUBLIC -fPIC -lpthread -lm libfrugi -ldl -latomic
-        PUBLIC libtreedbs dtree
+        PUBLIC -fPIC -lpthread -lm -ldl -latomic
+        PUBLIC libtreedbs dtree libfrugi
         )
 
 add_dependencies(libdmc libtreedbs)

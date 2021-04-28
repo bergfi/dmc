@@ -1,13 +1,13 @@
 #pragma once
 
 #include "interface.h"
-#include "../../../../httest/chaintableUBVKmem.h"
+#include "chaintableUBVKmem.h"
 #include <libfrugi/Settings.h>
 #include <thread>
 
 using namespace libfrugi;
 
-namespace hashtables {
+namespace chaintablegenericUBVKmem {
 
 template<>
 struct key_accessor<llmc::storage::StorageInterface::FullState> {
@@ -32,7 +32,7 @@ public:
 
     ~cchm() {
         size_t buckets = 1ULL << _hashmapRootScale;
-        if(_rootMap) MMapper::munmap(_rootMap, buckets * sizeof(*_rootMap));
+        if(_rootMap) chaintablegenericUBVKmem::MMapper::munmap(_rootMap, buckets * sizeof(*_rootMap));
         _rootMap = nullptr;
     }
 
@@ -41,7 +41,7 @@ public:
         _store.setBucketScale(_hashmapScale);
         size_t buckets = 1ULL << _hashmapRootScale;
         _hashmapRootMask = buckets - 1;
-        _rootMap = (decltype(_rootMap))MMapper::mmapForMap(buckets * sizeof(*_rootMap));
+        _rootMap = (decltype(_rootMap))chaintablegenericUBVKmem::MMapper::mmapForMap(buckets * sizeof(*_rootMap));
         assert(_rootMap);
         _store.init();
     }
