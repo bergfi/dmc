@@ -3,7 +3,7 @@
 #include <iostream>
 
 #include "interface.h"
-#include "../../../../dtree/dtree/include/dtree/dtree.h"
+#include <dtree/dtree.h>
 #include <libfrugi/Settings.h>
 
 using namespace libfrugi;
