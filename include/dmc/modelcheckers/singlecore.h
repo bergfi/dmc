@@ -50,11 +50,6 @@ public:
 
         Context ctx(this, this->_m);
         _m->init(&ctx);
-        if(_m->getStateVectorType()) {
-            std::cout << "State vector is of type " << *_m->getStateVectorType() << std::endl;
-        } else {
-            std::cout << "State vector has no type" << std::endl;
-        }
         size_t initialStates = this->_m->getInitial(&ctx);
 
         System::Timer timer;

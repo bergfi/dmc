@@ -1,5 +1,5 @@
 project (dmc)
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.19)
 include(FetchContent)
 
 FetchContent_Declare(
@@ -14,29 +14,6 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(libfrugi dtree)
-#if(NOT dtree_POPULATED)
-#add_subdirectory(${dtree_SOURCE_DIR} ${dtree_BINARY_DIR})
-#endif()
-#if(NOT libfrugi_POPULATED)
-#add_subdirectory(${libfrugi_SOURCE_DIR} ${libfrugi_BINARY_DIR})
-#endif()
-
-##find_package(libfrugi REQUIRED)
-#find_package(libfrugi CONFIG)
-#if(NOT ${libfrugi_DIR})
-#    message("libfrugi not found")
-#    message("LOOOOOOOOOOOOOOOOOOOOOOL")
-#    FetchContent_MakeAvailable(libfrugi)
-#    #    ExternalProject_Add(libfrugiproj
-#    #            GIT_REPOSITORY https://github.com/bergfi/libfrugi.git
-#    #            GIT_TAG        master
-#    #            CONFIGURE_COMMAND ""
-#    #            )
-#    find_package(libfrugi CONFIG REQUIRED)
-#    add_subdirectory()
-#    #    set(libfrugi_FOUND true)
-#endif()
-
 
 set(libdmc_VERSION_MAJOR 0)
 set(libdmc_VERSION_MINOR 2)
@@ -46,7 +23,7 @@ set(libdmc_VERSION "${libdmc_VERSION_MAJOR}.${libdmc_VERSION_MINOR}.${libdmc_VER
 set(INSTALL_LIB_DIR lib CACHE PATH "Installation directory for libraries")
 set(INSTALL_BIN_DIR bin CACHE PATH "Installation directory for executables")
 set(INSTALL_INCLUDE_DIR include CACHE PATH "Installation directory for header files")
-#set(INSTALL_SYSCONFIG_DIR etc/dmc CACHE PATH "Installation directory for config files")
+
 if(WIN32 AND NOT CYGWIN)
     set(DEF_INSTALL_CMAKE_DIR CMake)
 else()
@@ -58,7 +35,6 @@ add_subdirectory(treedbs EXCLUDE_FROM_ALL)
 
 add_library(libdmc
         libdmccapi.cpp
-        #        pins/pinsWrapper.cpp
         )
 set_target_properties(libdmc PROPERTIES OUTPUT_NAME "dmc")
 set_property(TARGET libdmc PROPERTY POSITION_INDEPENDENT_CODE ON)

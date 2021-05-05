@@ -1,3 +1,11 @@
+FetchContent_Declare(
+    googletest
+    GIT_REPOSITORY https://github.com/google/googletest.git
+    GIT_TAG        6a7ed316a5cdc07b6d26362c90770787513822d4
+)
+
+FetchContent_MakeAvailable(googletest)
+
 include(GoogleTest)
 
 add_executable(storage_test
@@ -20,8 +28,6 @@ target_link_libraries(storage_test PUBLIC
     dtree
     )
 add_test(storage_test storage_test)
-
-#target_link_libraries(storage_test ${GTEST_LIBRARY_DEBUG} ${GTEST_MAIN_LIBRARY_DEBUG})
 
 add_executable(model_test
         model_test.cpp

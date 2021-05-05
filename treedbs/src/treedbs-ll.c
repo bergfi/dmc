@@ -19,17 +19,6 @@ static const uint64_t   EMPTY_1 = -1UL;
 static const size_t     CACHE_LINE_64 = (1 << CACHE_LINE) / sizeof (uint64_t);
 static const size_t     CL_MASK = -((1 << CACHE_LINE) / sizeof (uint64_t));
 
-#define HREassert(e,...) \
-    if (EXPECT_FALSE(!(e))) {\
-        char buf[4096];\
-        if (#__VA_ARGS__[0])\
-            snprintf(buf, 4096, ": " __VA_ARGS__);\
-        else\
-            buf[0] = '\0';\
-        fprintf(stderr, "assertion \"%s\" failed%s", #e, buf);\
-    }
-
-
 typedef struct node_table_s {
     uint64_t           *table;
     size_t              log_size;
