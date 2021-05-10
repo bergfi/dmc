@@ -56,3 +56,20 @@ References:
 - [1] van der Berg, F. I. (2021) Recursive Variable-Length State Compression for Multi-Core Software Model Checking. 2021 NASA Formal Methods. Preprint.
 - [2] Laarman, A., van de Pol, J. C., & Weber, M. (2011). Parallel Recursive State Compression for Free. ArXiv. http://arxiv.org/abs/1104.3119
 - [3] van der Berg, F. I., & van de Pol, J. (2019). Concurrent chaining hash maps for software model checking. In C. Barrett, & J. Yang (Eds.), 2019 Formal Methods in Computer Aided Design (FMCAD) (pp. 46-54). [8894279] (Proceedings of the Conference on Formal Methods in Computer-Aided Design (FMCAD); Vol. 2019). IEEE. https://doi.org/10.23919/FMCAD.2019.8894279
+
+# License
+
+DMC - DMC Model Checker is a modular, multi-core model checker
+Copyright © 2021 Freark van der Berg
+
+DMC is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, version 3 of the License.
+
+DMC is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with DMC; see COPYING.  If not, see <https://www.gnu.org/licenses/>.
