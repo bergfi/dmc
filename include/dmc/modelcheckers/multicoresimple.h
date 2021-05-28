@@ -21,6 +21,7 @@
 
 #include <deque>
 #include <shared_mutex>
+#include <mutex>
 #include <thread>
 #include <dmc/modelcheckers/interface.h>
 #include <dmc/statespace/listener.h>

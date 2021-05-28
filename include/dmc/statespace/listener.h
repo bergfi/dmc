@@ -23,6 +23,7 @@
 #include <iostream>
 #include <ostream>
 #include <shared_mutex>
+#include <mutex>
 #include <libfrugi/Settings.h>
 
 using namespace libfrugi;

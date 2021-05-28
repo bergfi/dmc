@@ -30,6 +30,7 @@
 #include <libfrugi/Settings.h>
 #include <algorithm>
 #include <iomanip>
+#include <condition_variable>
 #include <signal.h>
 
 using namespace libfrugi;

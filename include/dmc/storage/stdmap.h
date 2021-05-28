@@ -21,6 +21,7 @@
 
 #include <cstring>
 #include <shared_mutex>
+#include <mutex>
 #include <unordered_map>
 
 #include "interface.h"
