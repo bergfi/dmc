@@ -1,3 +1,5 @@
+![CMake result](https://github.com/bergfi/dmc/actions/workflows/master.yml/badge.svg)
+
 # DMC Model Checker
 
 DMC Model Checker is a modular multi-threaded model checker with a model-agnostic model interface, the DMC API. Models can implement this API such that DMC can model check them. The modules that DMC consists of are:
